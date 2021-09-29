@@ -3,6 +3,8 @@ package org.lmmarise.netty.tomcat;
 import org.lmmarise.netty.tomcat.http.Request;
 import org.lmmarise.netty.tomcat.http.Response;
 import org.lmmarise.netty.tomcat.http.Servlet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -21,12 +23,15 @@ import java.util.concurrent.*;
  * @since 2021/9/29 12:26 下午
  */
 public class Tomcat {
+    private static final Logger log = LoggerFactory.getLogger(Tomcat.class);
+
     private final int port = 8080;
     private ServerSocket server;
     private final Map<String, Servlet> servletMapping = new HashMap<>();
     private final Properties webConf = new Properties();
-    private final ExecutorService executor = new ThreadPoolExecutor(10, 10,
-            60L, TimeUnit.SECONDS, new ArrayBlockingQueue(10));
+    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(50, 200, 60, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(5000), r -> new Thread(r, "Tomcat-ThreadPool-" + r.hashCode()),
+            new ThreadPoolExecutor.DiscardOldestPolicy());
 
     /**
      * 加载 web.properties（web.xml）文件，同时初始化 ServletMapping 对象
@@ -61,10 +66,10 @@ public class Tomcat {
             server = new ServerSocket(this.port);
             System.out.println("Tomcat 已启动，监听的端口：" + this.port);
             while (true) {          // 等待用户请求
-                // 接收来自客户端的Socket连接请求
-                Socket client = server.accept();    // 调用PlainSocketImpl#socketAccept方法阻塞，到系统接收到连接请求后通知恢复
-                process(client);    // HTTP 请求
-                executor.submit(() -> processWrapperWithException(client));
+                // 接收来自客户端的Socket连接请求，将客户端封装为Socket
+                Socket client = server.accept();        // 调用PlainSocketImpl#socketAccept方法阻塞，到系统接收到连接请求后通知恢复
+                // 处理客户端的 HTTP 请求
+                executor.submit(() -> processWrapperWithException(client));     // 将任务提交到线程池处理，Acceptor线程模型
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,33 +81,35 @@ public class Tomcat {
      */
     private void processWrapperWithException(Socket client) {
         try {
+            log.info("处理来自{}的请求", client.getInetAddress());
             process(client);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * 调用Servlet处理客户端请求
+     */
     private void process(Socket client) throws Exception {
-        InputStream is = client.getInputStream();
-        OutputStream os = client.getOutputStream();
-
-        Request request = new Request(is);
-        Response response = new Response(os);
-
-        String url = request.getUrl();
-        if (servletMapping.containsKey(url)) {  // 匹配 Servlet
-            servletMapping
-                    .get(url)
-                    .service(request, response);    // 处理业务逻辑
-        } else {
-            response.write("404 - Not Found");
+        if (client.getInputStream() == null || client.getOutputStream() == null) {
+            return;
         }
+        try (InputStream is = client.getInputStream(); OutputStream os = client.getOutputStream()) {    // 输入输出流自动关闭
+            Request request = new Request(is);
+            Response response = new Response(os);
 
-        os.flush(); // 不管管道里面数据有没有满，都会推送数据出去
-        os.close(); // 先关闭输出端
-        is.close();
-
-        client.close(); // 关闭socket
+            String url = request.getUrl();
+            if (servletMapping.containsKey(url)) {  // 匹配 Servlet
+                servletMapping
+                        .get(url)
+                        .service(request, response);    // 处理业务逻辑
+            } else {
+                response.write("404 - Not Found");
+            }
+            os.flush(); // 不管管道里面数据有没有满，都会推送数据出去
+            client.close(); // 关闭socket
+        }
     }
 
     /**
