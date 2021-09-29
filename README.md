@@ -2,14 +2,16 @@
 基于Netty开发框架或其它使用。
 ![img.png](img.png)
 
-### list1-nio
-netty是基于nio的，主要演示nio的使用和原理。<br><br>
-为何Netty不使用AIO？
-1. Netty不看重Windows上的使用，而Linux没有异步，只有epoll的伪劣异步。因此，性能差异不大。 
-2. Netty用Reactor模型，AIO用Proactor模型。避免混乱，把AIO改造成Reactor模型，也就是把epoll绕了回来。 
-3. AIO接收数据需要预先分配缓存，NIO接收时才分配，对连接数大但流量小的情况，AIO浪费内存。 Linux上AIO不够成熟，处理回调结果跟不上处理需求，造成处理速度瓶颈。
+### list1-io
 
-### list2-tomcat
+主要演示Java中BIO、NIO、AIO的使用。
+
+netty是基于nio的，为何Netty不使用AIO？
+  1. Netty不看重Windows上的使用，而Linux没有异步，只有epoll的伪劣异步。因此，性能差异不大。 
+  2. Netty用Reactor模型，AIO用Proactor模型。避免混乱，把AIO改造成Reactor模型，也就是把epoll绕了回来。 
+  3. AIO接收数据需要预先分配缓存，NIO接收时才分配，对连接数大但流量小的情况，AIO浪费内存。 Linux上AIO不够成熟，处理回调结果跟不上处理需求，造成处理速度瓶颈。
+
+### list2-tomcat-bio
 基于Netty开发自己的web服务器，基于bio。
 
 Acceptor线程模型：<br>
@@ -21,3 +23,18 @@ Acceptor线程模型：<br>
 
 缺点：<br>
 资源消耗明显，开销大。
+
+### list3-tomcat-netty
+
+基于Netty重构我们的BIO实现的tomcat。
+
+## 压测
+### tomcat-bio
+ab -n 16000 -c 100 -r http://127.0.0.1:8080/secondServlet.do
+![img_9.png](img_9.png)
+![img_8.png](img_8.png)
+
+### tomcat-netty
+ab -n 16000 -c 100 -r http://127.0.0.1:8081/secondServlet.do
+![img_3.png](img_3.png)
+![img_6.png](img_6.png)

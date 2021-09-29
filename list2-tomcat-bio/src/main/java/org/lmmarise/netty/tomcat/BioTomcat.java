@@ -22,16 +22,16 @@ import java.util.concurrent.*;
  * @author lmmarise.j@gmail.com
  * @since 2021/9/29 12:26 下午
  */
-public class Tomcat {
-    private static final Logger log = LoggerFactory.getLogger(Tomcat.class);
+public class BioTomcat {
+    private static final Logger log = LoggerFactory.getLogger(BioTomcat.class);
 
     private final int port = 8080;
     private ServerSocket server;
     private final Map<String, Servlet> servletMapping = new HashMap<>();
     private final Properties webConf = new Properties();
-    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(50, 200, 60, TimeUnit.SECONDS,
+    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(36, 60, 60, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(5000), r -> new Thread(r, "Tomcat-ThreadPool-" + r.hashCode()),
-            new ThreadPoolExecutor.DiscardOldestPolicy());
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
     /**
      * 加载 web.properties（web.xml）文件，同时初始化 ServletMapping 对象
@@ -81,7 +81,7 @@ public class Tomcat {
      */
     private void processWrapperWithException(Socket client) {
         try {
-            log.info("处理来自{}的请求", client.getInetAddress());
+//            log.info("处理来自{}的请求", client.getInetAddress());
             process(client);
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,6 +116,6 @@ public class Tomcat {
      * 启动自己写的 web 服务器
      */
     public static void main(String[] args) {
-        new Tomcat().start();
+        new BioTomcat().start();
     }
 }

@@ -25,7 +25,6 @@ public class Request {
 
             this.method = arr[0];
             this.url = arr[1].split("\\?")[0];
-            System.out.println(content);
         } catch (Exception e) {
             e.printStackTrace();
         }
