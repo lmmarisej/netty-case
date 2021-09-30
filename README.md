@@ -1,6 +1,6 @@
-## netty-use
-基于Netty开发框架或其它使用。
-![img.png](img.png)
+## netty-case
+基于Netty开发应用。
+![readme/images/img.png](readme/images/img.png)
 
 ### list1-io
 
@@ -16,7 +16,7 @@ netty是基于nio的，为何Netty不使用AIO？
 
 Acceptor线程模型：<br>
 普通情况是来一个客户端连接分配一个线程去处理，Acceptor模型就是依靠线程池来进行处理。
-![img_2.png](img_2.png)
+![readme/images/img_2.png](readme/images/img_2.png)
 
 优点：<br>
 开发简单。
@@ -28,13 +28,25 @@ Acceptor线程模型：<br>
 
 基于Netty重构我们的BIO实现的tomcat。
 
+### list4-netty-rpc
+使用Netty模拟rpc框架工作。<br><br>
+#### PS: <br>
+里面有bug，在macOS下无法工作：io.netty.handler.codec.DecoderException: java.io.StreamCorruptedException: Unsupported version: 0
+待我功力大增后回来修改。
+
+### list5-netty-technique
+测试case，演示Netty中用到的性能优化等技术。
+
+### list6-netty-chat
+使用Netty搭建im系统。
+
 ## 压测
 ### tomcat-bio
 ab -n 16000 -c 100 -r http://127.0.0.1:8080/secondServlet.do
-![img_9.png](img_9.png)
-![img_8.png](img_8.png)
+![readme/images/img_9.png](readme/images/img_9.png)
+![readme/images/img_8.png](readme/images/img_8.png)
 
 ### tomcat-netty
 ab -n 16000 -c 100 -r http://127.0.0.1:8081/secondServlet.do
-![img_3.png](img_3.png)
-![img_6.png](img_6.png)
+![readme/images/img_3.png](readme/images/img_3.png)
+![readme/images/img_6.png](readme/images/img_6.png)

@@ -10,9 +10,12 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>list1-nio</module>
+        <module>list1-io</module>
         <module>list2-tomcat-bio</module>
         <module>list3-tomcat-netty</module>
+        <module>list4-rpc-netty</module>
+        <module>list5-netty-technique</module>
+        <module>list6-netty-chat</module>
     </modules>
 
     <properties>
